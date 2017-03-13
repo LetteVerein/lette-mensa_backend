@@ -12,9 +12,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.json.*;
 
-import org.json.JSONArray;
-import org.json.simple.JSONObject;
 
 @WebServlet("/getLastWeeks")
 public class getLastWeeks extends HttpServlet {
@@ -62,7 +61,6 @@ public class getLastWeeks extends HttpServlet {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "null" })
 	private JSONArray getLast(int amountOfWeeks, Connection dbConnection) {
 		JSONArray foodObject = null;
 		try {

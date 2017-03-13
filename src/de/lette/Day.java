@@ -12,8 +12,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.json.*;
 
-import org.json.simple.JSONObject;
 
 import com.mysql.jdbc.exceptions.MySQLNonTransientConnectionException;
 
@@ -28,23 +28,24 @@ public class Day extends HttpServlet {
 	final String sql_terminDiaet = "SELECT * FROM diaetermine WHERE datum=?";
 	final String sql_speiseDiaet = "SELECT * FROM diaetspeisen WHERE id=?";
 
-	@SuppressWarnings("unchecked")
 	public JSONObject getWeekfromDate(String date, String termin, String speise, HttpServletResponse response)
 			throws SQLException, ClassNotFoundException, IOException, MySQLNonTransientConnectionException {
+		
 		JSONObject dateObject = new JSONObject();
 		JSONObject typeObject = null;
-
-		ArrayList<Integer> results = new ArrayList<Integer>();
-		String[] parts = date.split("-");
-		String year = parts[0];
-		String month = parts[1];
-		int day = Integer.parseInt(parts[2]);
+		ArrayList<Integer> dateArray = new ArrayList<Integer>();
 		String formated = "";
+		
+		String[] dateElements = date.split("-");
+		String year = dateElements[0];
+		String month = dateElements[1];
+		int day = Integer.parseInt(dateElements[2]);
 		if (day < 10) {
 			formated = String.format("%02d", day);
 		} else {
 			formated = Integer.toString(day);
 		}
+		
 		ConnectDB connection = new ConnectDB();
 		ServletContext context = getServletContext();
 		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
@@ -53,62 +54,59 @@ public class Day extends HttpServlet {
 		connection.connectDB();
 
 		if (connection.getDbConnection() != null) {
-			PreparedStatement ps = null;
-			ps = connection.getDbConnection().prepareStatement(termin);
-			ps.setString(1, year + "-" + month + "-" + formated);
-			ResultSet rs = ps.executeQuery();
-			results.clear();
-			// Füge Speisenummer ins Array
-			while (rs.next()) {
-				results.add(Integer.parseInt(rs.getString(3)));
+			PreparedStatement psFindDates = null;
+			psFindDates = connection.getDbConnection().prepareStatement(termin);
+			psFindDates.setString(1, year + "-" + month + "-" + formated);
+			
+			ResultSet rsDates = psFindDates.executeQuery();
+			dateArray.clear();
+			while (rsDates.next()) {
+				dateArray.add(Integer.parseInt(rsDates.getString(3)));
 			}
 			typeObject = new JSONObject();
-			// Alle Seisen(-arten) pro Datum
-			for (int i1 = 0; i1 < results.size(); i1++) {
-				PreparedStatement pss = connection.dbConnection.prepareStatement(speise);
-				// Parameter Speise ID für "Where Klausel"
-				pss.setInt(1, results.get(i1));
-				ResultSet rss = pss.executeQuery();
-				// Alle Speiseeigenschaften pro Speise
-				while (rss.next()) {
-					JSONObject foodObject = new JSONObject();
-					if (rss.getString(2) == "") {
+			for (int iterateDates = 0; iterateDates < dateArray.size(); iterateDates++) {
+				PreparedStatement psFindMealByDate = connection.dbConnection.prepareStatement(speise);
+				psFindMealByDate.setInt(1, dateArray.get(iterateDates));
+				ResultSet rsMealsByDay = psFindMealByDate.executeQuery();
+				
+				while (rsMealsByDay.next()) {
+					JSONObject foodObject=new JSONObject();
+					
+					if (rsMealsByDay.getString(2) == "") {
 						foodObject.put("name", "Kein Name vorhanden");
 					} else {
-						foodObject.put("name", rss.getString(2));
+						foodObject.put("name", rsMealsByDay.getString(2));
 					}
-					if (rss.getString(4) == "") {
+					if (rsMealsByDay.getString(4) == "") {
 						foodObject.put("beachte", "Nichts zu beachten");
 					} else {
-						foodObject.put("beachte", rss.getString(4));
+						foodObject.put("beachte", rsMealsByDay.getString(4));
 					}
-					foodObject.put("kcal", rss.getString(5));
-					foodObject.put("eiweisse", rss.getString(6));
-					foodObject.put("fette", rss.getString(7));
-					foodObject.put("kolenhydrate", rss.getString(8));
-					if (rss.getString(9) == "") {
+					foodObject.put("kcal", rsMealsByDay.getString(5));
+					foodObject.put("eiweisse", rsMealsByDay.getString(6));
+					foodObject.put("fette", rsMealsByDay.getString(7));
+					foodObject.put("kolenhydrate", rsMealsByDay.getString(8));
+					
+					if (rsMealsByDay.getString(9) == "") {
 						foodObject.put("beschreibung", "Keine Beschreibung vorhanden");
 					} else {
-						foodObject.put("beschreibung", rss.getString(9));
+						foodObject.put("beschreibung", rsMealsByDay.getString(9));
 					}
-					foodObject.put("preis", rss.getString(10));
-					foodObject.put("zusatzstoffe", rss.getString(11));
+					foodObject.put("preis", rsMealsByDay.getString(10));
+					foodObject.put("zusatzstoffe", rsMealsByDay.getString(11));
 
-					String art = rss.getString(3);
+					String art = rsMealsByDay.getString(3);
 					typeObject.put(art, foodObject);
 				}
-				ps.close();
+				psFindDates.close();
 			}
 			dateObject.put(year + "-" + month + "-" + formated, typeObject);
 			day++;
-
-			
 		}
 		return dateObject;
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public void getData(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, ClassNotFoundException, SQLException {
 		ConnectDB connection = new ConnectDB();
 		ServletContext context = getServletContext();
@@ -127,7 +125,6 @@ public class Day extends HttpServlet {
 			} else {
 				JSONObject masterObj = new JSONObject();
 				try {
-					// Parameter "week" = StartDatum
 					JSONObject usualCanteen = getWeekfromDate(request.getParameter("week"), sql_terminNormal,
 							sql_speiseNormal, response);
 					JSONObject diatCanteen = getWeekfromDate(request.getParameter("week"), sql_terminDiaet,
@@ -138,7 +135,7 @@ public class Day extends HttpServlet {
 				}
 				response.getWriter().write(masterObj.toString());
 			}
-			// Close DB
+			
 			try {
 				connection.getDbConnection().close();
 			} catch (SQLException e) {
@@ -146,11 +143,7 @@ public class Day extends HttpServlet {
 			}
 		}
 	}
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
+	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {

@@ -3,14 +3,13 @@ package de.lette;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,14 +23,6 @@ import com.esotericsoftware.minlog.Log;;
 public class saveMeal extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
-
-	// Database Information
-	Connection dbConnection = null;
-	String dbHost = "localhost";
-	String dbPort = "3306";
-	String dbName = "mensa";
-	String dbUser = "mensa";
-	String dbPass = "8UXBsmX26MKEAyr";
 	
 	String sql_InsertNormalMeal = "INSERT INTO speisen(name,art,beachte,kcal,eiweisse,fette,kohlenhydrate,beschreibung,preis,zusatzstoffe) VALUES (?,?,?,?,?,?,?,?,?,?)";
 	String sql_InsertDiaetMeal = "INSERT INTO diaetspeisen(name,art,beachte,kcal,eiweisse,fette,kohlenhydrate,beschreibung,preis,zusatzstoffe) VALUES (?,?,?,?,?,?,?,?,?,?)";
@@ -48,20 +39,14 @@ public class saveMeal extends HttpServlet {
 		super();
 	}
 
-	/*
-	 * connects to a MySQL based database by the supplied login data
-	 */
-	public Connection connectDB() throws ClassNotFoundException, SQLException {
-		Class.forName("com.mysql.jdbc.Driver");
-		dbConnection = DriverManager.getConnection("jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName + "?"
-				+ "user=" + dbUser + "&" + "password=" + dbPass);
-		return dbConnection;
-	}
-	
-
 	public void getData(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
-			Connection connection = connectDB(); // Creates a instance of a connection
+			ConnectDB connection = new ConnectDB(); // Creates a instance of a connection
+			ServletContext context = getServletContext();
+			String fullPath = context.getRealPath("/WEB-INF/db.cfg");
+			connection.init(fullPath);
+			connection.connectDB();
+			
 			String POSTData = ""; // Will save the JSON data from the POST
 			StringBuffer tempReader = new StringBuffer();
 			String line = null;
@@ -79,7 +64,7 @@ public class saveMeal extends HttpServlet {
 				throw new IOException("Error parsing JSON request string");
 			}
 
-			if (connection != null) {
+			if (connection.getDbConnection() != null) {
 				
 				
 				org.json.JSONObject wholeJSON = new org.json.JSONObject(POSTData.trim()); //Creates a JSON Object from the POST Data
@@ -87,9 +72,9 @@ public class saveMeal extends HttpServlet {
 				org.json.JSONObject diaetCanteen = (JSONObject) wholeJSON.get("Mensa1"); //Saves Mensa1("diaet Canteen") into a JSON Object
 
 				PreparedStatement ps;
-				ps = connection.prepareStatement(sql_getKey);
+				ps = connection.getDbConnection().prepareStatement(sql_getKey);
 				String authKey =  wholeJSON.getString("auth_pw");
-				Log.info("- "+ request.getRemoteAddr() + " send request with the password " + authKey);
+				Log.info("- "+ request.getRemoteAddr() + " sent request with the password " + authKey);
 				
 				
 				ps.setString(1, authKey);
@@ -121,7 +106,7 @@ public class saveMeal extends HttpServlet {
 						datesJSON = (JSONObject) normalCanteen.get(key);
 						if(count == 0)
 						{
-							delteExistingDate(key,false);
+							delteExistingDate(key,false,connection);
 						}
 						count++;
 						try {
@@ -131,7 +116,7 @@ public class saveMeal extends HttpServlet {
 									(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
 									(String) appetizerJSON.get("kolenhydrate"),
 									(String) appetizerJSON.get("beschreibung"), (String) appetizerJSON.get("preis"),
-									(String) appetizerJSON.get("zusatzstoffe"), false, key);
+									(String) appetizerJSON.get("zusatzstoffe"), false, key,connection);
 						} catch (JSONException e) {
 						}
 
@@ -142,7 +127,7 @@ public class saveMeal extends HttpServlet {
 									(String) fullFoodJSON.get("eiweisse"), (String) fullFoodJSON.get("fette"),
 									(String) fullFoodJSON.get("kolenhydrate"),
 									(String) fullFoodJSON.get("beschreibung"), (String) fullFoodJSON.get("preis"),
-									(String) fullFoodJSON.get("zusatzstoffe"), false, key);
+									(String) fullFoodJSON.get("zusatzstoffe"), false, key,connection);
 						} catch (JSONException e) {
 						}
 
@@ -153,7 +138,7 @@ public class saveMeal extends HttpServlet {
 									(String) vegetarischJSON.get("eiweisse"), (String) vegetarischJSON.get("fette"),
 									(String) vegetarischJSON.get("kolenhydrate"),
 									(String) vegetarischJSON.get("beschreibung"), (String) vegetarischJSON.get("preis"),
-									(String) vegetarischJSON.get("zusatzstoffe"), false, key);
+									(String) vegetarischJSON.get("zusatzstoffe"), false, key,connection);
 						} catch (JSONException e) {
 						}
 
@@ -164,7 +149,7 @@ public class saveMeal extends HttpServlet {
 									(String) beilagenJSON.get("eiweisse"), (String) beilagenJSON.get("fette"),
 									(String) beilagenJSON.get("kolenhydrate"),
 									(String) beilagenJSON.get("beschreibung"), (String) beilagenJSON.get("preis"),
-									(String) beilagenJSON.get("zusatzstoffe"), false, key);
+									(String) beilagenJSON.get("zusatzstoffe"), false, key,connection);
 						} catch (JSONException e) {
 						}
 
@@ -174,7 +159,7 @@ public class saveMeal extends HttpServlet {
 									(String) dessertJSON.get("eiweisse"), (String) dessertJSON.get("fette"),
 									(String) dessertJSON.get("kolenhydrate"),
 									(String) dessertJSON.get("beschreibung"), (String) dessertJSON.get("preis"),
-									(String) dessertJSON.get("zusatzstoffe"), false, key);
+									(String) dessertJSON.get("zusatzstoffe"), false, key,connection);
 						
 
 					}
@@ -190,7 +175,7 @@ public class saveMeal extends HttpServlet {
 						datesJSON = (JSONObject) diaetCanteen.get(key);
 						if(count == 0)
 						{
-							delteExistingDate(key,true);
+							delteExistingDate(key,true,connection);
 						}
 						count++;
 						
@@ -201,7 +186,7 @@ public class saveMeal extends HttpServlet {
 									(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
 									(String) appetizerJSON.get("kolenhydrate"),
 									(String) appetizerJSON.get("beschreibung"), (String) appetizerJSON.get("preis"),
-									(String) appetizerJSON.get("zusatzstoffe"), true, key);
+									(String) appetizerJSON.get("zusatzstoffe"), true, key,connection);
 						} catch (JSONException e) {
 						}
 
@@ -213,7 +198,7 @@ public class saveMeal extends HttpServlet {
 									(String) lightFullFoodJSON.get("kolenhydrate"),
 									(String) lightFullFoodJSON.get("beschreibung"),
 									(String) lightFullFoodJSON.get("preis"),
-									(String) lightFullFoodJSON.get("zusatzstoffe"), true, key);
+									(String) lightFullFoodJSON.get("zusatzstoffe"), true, key,connection);
 						} catch (JSONException e) {
 						}
 						
@@ -225,7 +210,7 @@ public class saveMeal extends HttpServlet {
 									(String) dessertJSON.get("eiweisse"), (String) dessertJSON.get("fette"),
 									(String) dessertJSON.get("kolenhydrate"), (String) dessertJSON.get("beschreibung"),
 									(String) dessertJSON.get("preis"), (String) dessertJSON.get("zusatzstoffe"), true,
-									key);
+									key,connection);
 						} catch (JSONException e) {
 						}
 						
@@ -236,14 +221,14 @@ public class saveMeal extends HttpServlet {
 									(String) VegetabledishesJSON.get("eiweisse"), (String) VegetabledishesJSON.get("fette"),
 									(String) VegetabledishesJSON.get("kolenhydrate"), (String) VegetabledishesJSON.get("beschreibung"),
 									(String) VegetabledishesJSON.get("preis"), (String) VegetabledishesJSON.get("zusatzstoffe"), true,
-									key);
+									key,connection);
 						} catch (JSONException e) {
 						}
 					}
 				}
 
 				try {
-					connection.close();
+					connection.dbConnection.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -256,24 +241,23 @@ public class saveMeal extends HttpServlet {
 		}
 	}
 	
-	private void delteExistingDate(String date,Boolean diaet) throws ClassNotFoundException, SQLException
+	private void delteExistingDate(String date,Boolean diaet,ConnectDB connection) throws ClassNotFoundException, SQLException
 	{
-		Connection connection = connectDB();
-		if(connection != null)
+		if(connection.getDbConnection() != null)
 		{
 			PreparedStatement ps;
-			ps = connection.prepareStatement(sql_findExistingDate);
+			ps = connection.getDbConnection().prepareStatement(sql_findExistingDate);
 			ps.setString(1, date);
 			ResultSet rs = ps.executeQuery();
 			while(rs.next())
 			{
 				if(diaet == false)
 				{
-					ps = connection.prepareStatement(sql_deleteExistingNormalDate);
+					ps = connection.getDbConnection().prepareStatement(sql_deleteExistingNormalDate);
 
 				}
 				else{
-					ps = connection.prepareStatement(sql_deleteExistingDiaetDate);
+					ps = connection.getDbConnection().prepareStatement(sql_deleteExistingDiaetDate);
 				}
 				ps.setString(1, date);
 				ps.executeUpdate();
@@ -292,16 +276,15 @@ public class saveMeal extends HttpServlet {
 	 * Saves a meal into the meal table in the database
 	 */
 	private void saveMealToDB(String name, String type, String notice, String kcal, String protein, String fat,
-			String carbohydrates, String description, String price, String additives, Boolean diaet, String date)
+			String carbohydrates, String description, String price, String additives, Boolean diaet, String date,ConnectDB connection)
 			throws ClassNotFoundException, SQLException {
 
-		Connection connection = connectDB();
-		if (connection != null) {
+		if (connection.getDbConnection() != null) {
 			PreparedStatement ps;
 			if (diaet == false) {
-				ps = connection.prepareStatement(sql_InsertNormalMeal);
+				ps = connection.getDbConnection().prepareStatement(sql_InsertNormalMeal);
 			} else {
-				ps = connection.prepareStatement(sql_InsertDiaetMeal);
+				ps = connection.getDbConnection().prepareStatement(sql_InsertDiaetMeal);
 			}
 			ps.setString(1, name);
 			ps.setString(2, type);
@@ -318,10 +301,10 @@ public class saveMeal extends HttpServlet {
 			ps = null;
 
 			if (diaet == false) {
-				ps = connection.prepareStatement(sql_getLatestNormalID);
+				ps = connection.getDbConnection().prepareStatement(sql_getLatestNormalID);
 			}
 			else{
-				ps = connection.prepareStatement(sql_getLatestDiaetID);
+				ps = connection.getDbConnection().prepareStatement(sql_getLatestDiaetID);
 			}
 			
 			ResultSet rs = ps.executeQuery();
@@ -334,10 +317,10 @@ public class saveMeal extends HttpServlet {
 			rs = null;
 			if (diaet == false)
 			{
-				ps = connection.prepareStatement(sql_InsertNormalDate);
+				ps = connection.getDbConnection().prepareStatement(sql_InsertNormalDate);
 			}
 			else{
-				ps = connection.prepareStatement(sql_InsertDiaetDate);
+				ps = connection.getDbConnection().prepareStatement(sql_InsertDiaetDate);
 			}
 			
 			ps.setString(1, date);
@@ -350,8 +333,5 @@ public class saveMeal extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		getData(request, response);
-	}
-	protected void doGet(HttpServletRequest request,HttpServletResponse respone)
-	{
 	}
 }
