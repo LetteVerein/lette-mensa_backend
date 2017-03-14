@@ -10,12 +10,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
-
-import org.json.*;
 
 import com.esotericsoftware.minlog.Log;;
 
@@ -66,9 +67,9 @@ public class saveMeal extends HttpServlet {
 			}
 
 			if (connection.getDbConnection() != null) {
-				org.json.JSONObject wholeJSON = new org.json.JSONObject(POSTData.trim());
-				org.json.JSONObject normalCanteen = (JSONObject) wholeJSON.get("Mensa0");
-				org.json.JSONObject diaetCanteen = (JSONObject) wholeJSON.get("Mensa1");
+				JSONObject wholeJSON = new JSONObject(POSTData.trim());
+				JSONObject normalCanteen = (JSONObject) wholeJSON.get("Mensa0");
+				JSONObject diaetCanteen = (JSONObject) wholeJSON.get("Mensa1");
 
 				PreparedStatement ps;
 				ps = connection.getDbConnection().prepareStatement(sql_getKey);
@@ -93,20 +94,20 @@ public class saveMeal extends HttpServlet {
 
 				Iterator<?> keys = normalCanteen.keys();
 				String[] types = { "Vorspeise", "Vollkost", "Vegetarisch", "Beilagen", "Dessert" };
-				org.json.JSONObject datesJSON = null;
+				JSONObject datesJSON = null;
 				int count = 0;
 
 				for (String index : types) {
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
-						if (normalCanteen.get(key) instanceof org.json.JSONObject) {
+						if (normalCanteen.get(key) instanceof JSONObject) {
 							datesJSON = (JSONObject) normalCanteen.get(key);
 							if (count == 0) {
 								delteExistingDate(key, false, connection);
 							}
 							count++;
 							try {
-								org.json.JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
+								JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
 								saveMealToDB((String) appetizerJSON.get("name"), index,
 										(String) appetizerJSON.get("beachte"), (String) appetizerJSON.get("kcal"),
 										(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
@@ -127,7 +128,7 @@ public class saveMeal extends HttpServlet {
 				for (String index : diaetTypes) {
 					while (keys.hasNext()) {
 						String key = (String) keys.next();
-						if (diaetCanteen.get(key) instanceof org.json.JSONObject) {
+						if (diaetCanteen.get(key) instanceof JSONObject) {
 							datesJSON = (JSONObject) diaetCanteen.get(key);
 							if (count == 0) {
 								delteExistingDate(key, true, connection);
@@ -135,7 +136,7 @@ public class saveMeal extends HttpServlet {
 							count++;
 
 							try {
-								org.json.JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
+								JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
 								saveMealToDB((String) appetizerJSON.get("name"), index,
 										(String) appetizerJSON.get("beachte"), (String) appetizerJSON.get("kcal"),
 										(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
