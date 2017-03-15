@@ -37,14 +37,23 @@ public class getLastWeeks extends HttpServlet {
 			if (connection.getDbConnection() != null) {
 				response.setCharacterEncoding("UTF-8");
 				response.setContentType("application/json");
-				response.setHeader("Access-Control-Allow-Origin", "*");
 
 				if (request.getParameter("weeks") == null || request.getParameter("weeks") == "") {
 					response.getWriter().write("Invalid input");
 				} else {
-					int weeks = Integer.parseInt(request.getParameter("weeks"));
-					JSONArray JSONmealNames = getLast(weeks, connection.getDbConnection());
-					response.getWriter().write(JSONmealNames.toString());
+					
+					if(isNumeric(request.getParameter("weeks")) && request.getParameter("weeks").length() < 5)
+					{
+						int weeks = Integer.parseInt(request.getParameter("weeks"));
+						JSONObject JSONmealNames = getLast(weeks, connection.getDbConnection());
+						response.getWriter().write(JSONmealNames.toString());
+					}
+					else 
+					{
+						response.getWriter().write("Invalid input");
+						response.sendError(400);
+					}
+					
 				}
 				// Close DB
 				try {
@@ -60,9 +69,13 @@ public class getLastWeeks extends HttpServlet {
 			e.printStackTrace();
 		}
 	}
+	
+	public boolean isNumeric(String s) {  
+	    return s.matches("[-+]?\\d*\\.?\\d+");  
+	}  
 
-	private JSONArray getLast(int amountOfWeeks, Connection dbConnection) {
-		JSONArray foodObject = null;
+	private JSONObject getLast(int amountOfWeeks, Connection dbConnection) {
+		JSONObject foodObject = null;
 		try {
 			PreparedStatement ps = null;
 			ps = dbConnection.prepareStatement(sql_getLastWeeks);
@@ -70,9 +83,11 @@ public class getLastWeeks extends HttpServlet {
 			ps.setInt(1, weeks);
 			ResultSet rs = ps.executeQuery();
 
-			foodObject = new JSONArray();
+			foodObject = new JSONObject();
+			int index = 0;
 			while (rs.next()) {
-				foodObject.put(rs.getString(1));
+				foodObject.put("item"+index,rs.getString(1));
+				index++;
 			}
 		}
 
