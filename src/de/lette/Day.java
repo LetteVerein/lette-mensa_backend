@@ -36,15 +36,12 @@ public class Day extends HttpServlet {
 		JSONObject typeObject = null;
 		ArrayList<Integer> dateArray = new ArrayList<Integer>();
 		String formated = "";
-		String[] dateElements = null;
-		String year = null;
-		String month = null;
-		int day = 0;
-
-		dateElements = date.split("-");
-		year = dateElements[0];
-		month = dateElements[1];
-		day = Integer.parseInt(dateElements[2]);
+		
+		String[] dateElements = date.split("-");
+		String year = dateElements[0];
+		String month = dateElements[1];
+		int day = Integer.parseInt(dateElements[2]);
+		
 		if (day < 10) {
 			formated = String.format("%02d", day);
 		} else {

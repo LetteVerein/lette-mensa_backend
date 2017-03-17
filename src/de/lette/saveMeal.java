@@ -93,60 +93,56 @@ public class saveMeal extends HttpServlet {
 				ps = null;
 
 				Iterator<?> keys = normalCanteen.keys();
+				String jsonDate = (String) keys.next();
 				String[] types = { "Vorspeise", "Vollkost", "Vegetarisch", "Beilagen", "Dessert" };
 				JSONObject datesJSON = null;
 				int count = 0;
 
 				for (String index : types) {
-					while (keys.hasNext()) {
-						String key = (String) keys.next();
-						if (normalCanteen.get(key) instanceof JSONObject) {
-							datesJSON = (JSONObject) normalCanteen.get(key);
-							if (count == 0) {
-								delteExistingDate(key, false, connection);
-							}
-							count++;
-							try {
-								JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
-								saveMealToDB((String) appetizerJSON.get("name"), index,
-										(String) appetizerJSON.get("beachte"), (String) appetizerJSON.get("kcal"),
-										(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
-										(String) appetizerJSON.get("kolenhydrate"),
-										(String) appetizerJSON.get("beschreibung"), (String) appetizerJSON.get("preis"),
-										(String) appetizerJSON.get("zusatzstoffe"), false, key, connection);
-							} catch (JSONException e) {
-							}
+
+					if (normalCanteen.get(jsonDate) instanceof JSONObject) {
+						datesJSON = (JSONObject) normalCanteen.get(jsonDate);
+						if (count == 0) {
+							delteExistingDate(jsonDate, false, connection);
+						}
+						count++;
+						try {
+							JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
+							saveMealToDB((String) appetizerJSON.get("name"), index,
+									(String) appetizerJSON.get("beachte"), (String) appetizerJSON.get("kcal"),
+									(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
+									(String) appetizerJSON.get("kolenhydrate"),
+									(String) appetizerJSON.get("beschreibung"), (String) appetizerJSON.get("preis"),
+									(String) appetizerJSON.get("zusatzstoffe"), false, jsonDate, connection);
+						} catch (JSONException e) {
 						}
 					}
+
 				}
 
 				keys = null;
 				count = 0;
 				keys = diaetCanteen.keys();
-				String[] diaetTypes = { "Vorspeise", "Leichte-Vollkost", "Dessert", "Gemï¿½seteller", "Dessert" };
+				jsonDate = (String) keys.next();
+				String[] diaetTypes = { "Vorspeise", "Leichte-Vollkost", "Dessert", "Gemüseteller", "Dessert" };
 
 				for (String index : diaetTypes) {
-					while (keys.hasNext()) {
-						String key = (String) keys.next();
-						if (diaetCanteen.get(key) instanceof JSONObject) {
-							datesJSON = (JSONObject) diaetCanteen.get(key);
-							if (count == 0) {
-								delteExistingDate(key, true, connection);
-							}
-							count++;
 
-							try {
-								JSONObject appetizerJSON = (JSONObject) datesJSON.get(index);
-								saveMealToDB((String) appetizerJSON.get("name"), index,
-										(String) appetizerJSON.get("beachte"), (String) appetizerJSON.get("kcal"),
-										(String) appetizerJSON.get("eiweisse"), (String) appetizerJSON.get("fette"),
-										(String) appetizerJSON.get("kolenhydrate"),
-										(String) appetizerJSON.get("beschreibung"), (String) appetizerJSON.get("preis"),
-										(String) appetizerJSON.get("zusatzstoffe"), true, key, connection);
-							} catch (JSONException e) {
-							}
+					if (diaetCanteen.get(jsonDate) instanceof JSONObject) {
+						datesJSON = (JSONObject) diaetCanteen.get(jsonDate);
+						if (count == 0) {
+							delteExistingDate(jsonDate, true, connection);
 						}
+						count++;
+
+						JSONObject mealJSON = (JSONObject) datesJSON.get(index);
+						saveMealToDB((String) mealJSON.get("name"), index, (String) mealJSON.get("beachte"),
+								(String) mealJSON.get("kcal"), (String) mealJSON.get("eiweisse"),
+								(String) mealJSON.get("fette"), (String) mealJSON.get("kolenhydrate"),
+								(String) mealJSON.get("beschreibung"), (String) mealJSON.get("preis"),
+								(String) mealJSON.get("zusatzstoffe"), true, jsonDate, connection);
 					}
+
 				}
 
 				try {
