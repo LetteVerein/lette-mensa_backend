@@ -84,7 +84,7 @@ public class saveMeal extends HttpServlet {
 					rsCount++;
 				}
 				if (rsCount < 1) {
-					response.sendError(400);
+					response.sendError(401);
 					Log.error("User rejected");
 					return;
 				}
