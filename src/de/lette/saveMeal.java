@@ -44,6 +44,7 @@ public class saveMeal extends HttpServlet {
 		try {
 			ConnectDB connection = new ConnectDB(); // Creates a instance of a
 													// connection
+			response.setHeader("Access-Control-Allow-Origin", "*");
 			ServletContext context = getServletContext();
 			String fullPath = context.getRealPath("/WEB-INF/db.cfg");
 			connection.init(fullPath);
@@ -242,5 +243,6 @@ public class saveMeal extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		getData(request, response);
+		
 	}
 }

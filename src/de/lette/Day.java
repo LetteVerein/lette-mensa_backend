@@ -125,7 +125,6 @@ public class Day extends HttpServlet {
 		if (connection.getDbConnection() != null) {
 			response.setCharacterEncoding("UTF-8");
 			response.setContentType("application/json");
-			response.setHeader("Access-Control-Allow-Origin", "*");
 
 			if (request.getParameter("week") == null || request.getParameter("week") == "") {
 				response.getWriter().write("Invalid input");
