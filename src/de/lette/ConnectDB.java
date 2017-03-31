@@ -18,7 +18,7 @@ public class ConnectDB {
 	String dbPass = "";
 
 	Properties properties;
-	
+
 	private void initConnectionDetails(String dbHost, String dbPort, String dbName, String dbUser, String dbPassword) {
 		this.dbHost = dbHost;
 		this.dbPort = dbPort;
