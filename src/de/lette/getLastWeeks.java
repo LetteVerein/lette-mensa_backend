@@ -22,51 +22,55 @@ public class getLastWeeks extends HttpServlet {
 	 */
 	private static final long serialVersionUID = 1L;
 	String sql_getLastWeeks = "SELECT name FROM `speisen` WHERE name !=\"\" ORDER BY name DESC LIMIT ?";
+	ConnectDB connection;
+	
+	@Override	
+	public void init()
+	{
+		connection = new ConnectDB();
+		ServletContext context = getServletContext();
+		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
+		
+		connection.init(fullPath);
+		try {
+			connection.connectDB();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		try {// Connect DB
-			ConnectDB connection = new ConnectDB();
-			ServletContext context = getServletContext();
-			String fullPath = context.getRealPath("/WEB-INF/db.cfg");
-			
-			connection.init(fullPath);
-			connection.connectDB();
+		if (connection.getDbConnection() != null) {
+			response.setCharacterEncoding("UTF-8");
+			response.setContentType("application/json");
 
-			if (connection.getDbConnection() != null) {
-				response.setCharacterEncoding("UTF-8");
-				response.setContentType("application/json");
-
-				if (request.getParameter("weeks") == null || request.getParameter("weeks") == "") {
+			if (request.getParameter("weeks") == null || request.getParameter("weeks") == "") {
+				response.getWriter().write("Invalid input");
+			} else {
+				
+				if(isNumeric(request.getParameter("weeks")) && request.getParameter("weeks").length() < 5)
+				{
+					int weeks = Integer.parseInt(request.getParameter("weeks"));
+					JSONObject JSONmealNames = getLast(weeks, connection.getDbConnection());
+					response.getWriter().write(JSONmealNames.toString());
+				}
+				else 
+				{
 					response.getWriter().write("Invalid input");
-				} else {
-					
-					if(isNumeric(request.getParameter("weeks")) && request.getParameter("weeks").length() < 5)
-					{
-						int weeks = Integer.parseInt(request.getParameter("weeks"));
-						JSONObject JSONmealNames = getLast(weeks, connection.getDbConnection());
-						response.getWriter().write(JSONmealNames.toString());
-					}
-					else 
-					{
-						response.getWriter().write("Invalid input");
-						response.sendError(400);
-					}
-					
+					response.sendError(400);
 				}
-				// Close DB
-				try {
-					connection.getDbConnection().close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
+				
 			}
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-
-			e.printStackTrace();
+			// Close DB
+			try {
+				connection.getDbConnection().close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
