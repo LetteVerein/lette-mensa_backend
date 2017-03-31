@@ -20,7 +20,7 @@ public class getLatestByPrefix extends HttpServlet {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	String sql_getByPrefixWithType = "SELECT name FROM `speisen` WHERE name LIKE ? AND ART=? ORDER BY name DESC LIMIT 500";
+	String sql_getByPrefixWithType = "SELECT name FROM `speisen` WHERE name LIKE ? AND ART=? ORDER BY name DESC LIMIT 15";
 	ConnectDB connection;
 
 	@Override

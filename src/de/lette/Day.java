@@ -25,14 +25,13 @@ public class Day extends HttpServlet {
 	final String sql_terminDiaet = "SELECT * FROM diaetermine WHERE datum=?";
 	final String sql_speiseDiaet = "SELECT * FROM diaetspeisen WHERE id=?";
 	ConnectDB connection;
-	
-	@Override	
-	public void init()
-	{
+
+	@Override
+	public void init() {
 		connection = new ConnectDB();
 		ServletContext context = getServletContext();
 		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
-		
+
 		connection.init(fullPath);
 		try {
 			connection.connectDB();
@@ -50,12 +49,12 @@ public class Day extends HttpServlet {
 		JSONObject typeObject = null;
 		ArrayList<Integer> dateArray = new ArrayList<Integer>();
 		String formated = "";
-		
+
 		String[] dateElements = date.split("-");
 		String year = dateElements[0];
 		String month = dateElements[1];
 		int day = Integer.parseInt(dateElements[2]);
-		
+
 		if (day < 10) {
 			formated = String.format("%02d", day);
 		} else {
