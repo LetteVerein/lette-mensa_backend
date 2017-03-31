@@ -14,81 +14,73 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.*;
 
-
 @WebServlet("/getLatestByPrefix")
 public class getLatestByPrefix extends HttpServlet {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	//String sql_getByPrefixWOType = "SELECT name FROM `speisen` WHERE name LIKE ? ORDER BY name DESC LIMIT 500";
-	String sql_getByPrefixWithType   = "SELECT name FROM `speisen` WHERE name LIKE ? AND ART=? ORDER BY name DESC LIMIT 500";
-	
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+	String sql_getByPrefixWithType = "SELECT name FROM `speisen` WHERE name LIKE ? AND ART=? ORDER BY name DESC LIMIT 500";
+	ConnectDB connection;
 
-		try {// Connect DB
-			ConnectDB connection = new ConnectDB();
-			ServletContext context = getServletContext();
-			String fullPath = context.getRealPath("/WEB-INF/db.cfg");
-			
-			connection.init(fullPath);
+	@Override
+	public void init() {
+		connection = new ConnectDB();
+		ServletContext context = getServletContext();
+		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
+
+		connection.init(fullPath);
+		try {
 			connection.connectDB();
-
-			if (connection.getDbConnection() != null) {
-				response.setCharacterEncoding("UTF-8");
-				response.setContentType("application/json");
-
-				if (request.getParameter("prefix") == null || request.getParameter("prefix") == "") {
-					response.getWriter().write("Invalid input");
-				} else {
-					
-					if(request.getParameter("prefix").length() > 0) 
-					{
-						String prefix = request.getParameter("prefix");
-						String type = request.getParameter("type");
-						JSONObject JSONmealNames = getLast(prefix,type, connection.getDbConnection());
-						response.getWriter().write(JSONmealNames.toString());
-					}
-					else 
-					{
-						response.getWriter().write("Invalid input");
-						response.sendError(400);
-					}
-					
-				}
-				// Close DB
-				try {
-					connection.getDbConnection().close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (SQLException e) {
-
 			e.printStackTrace();
 		}
 	}
-	
-	public boolean isNumeric(String s) {  
-	    return s.matches("[-+]?\\d*\\.?\\d+");  
-	}  
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		if (connection.getDbConnection() != null) {
+			response.setCharacterEncoding("UTF-8");
+			response.setContentType("application/json");
+
+			if (request.getParameter("prefix") == null || request.getParameter("prefix") == "") {
+				response.getWriter().write("Invalid input");
+			} else {
+
+				if (request.getParameter("prefix").length() > 0) {
+					String prefix = request.getParameter("prefix");
+					String type = request.getParameter("type");
+					JSONObject JSONmealNames = getLast(prefix, type, connection.getDbConnection());
+					response.getWriter().write(JSONmealNames.toString());
+				} else {
+					response.getWriter().write("Invalid input");
+					response.sendError(400);
+				}
+
+			}
+		}
+	}
+
+	public boolean isNumeric(String s) {
+		return s.matches("[-+]?\\d*\\.?\\d+");
+	}
 
 	private JSONObject getLast(String prefix, String type, Connection dbConnection) {
 		JSONObject foodObject = null;
 		try {
 			PreparedStatement ps = null;
 			ps = dbConnection.prepareStatement(sql_getByPrefixWithType);
-			ps.setString(1, "%"+prefix+"%");
+			ps.setString(1, "%" + prefix + "%");
 			ps.setString(2, type);
 			ResultSet rs = ps.executeQuery();
 
 			foodObject = new JSONObject();
 			int index = 0;
 			while (rs.next()) {
-				foodObject.put("item"+index,rs.getString(1));
+				foodObject.put("item" + index, rs.getString(1));
 				index++;
 			}
 		}

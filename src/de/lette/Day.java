@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import javax.security.auth.message.callback.PrivateKeyCallback.Request;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,14 +19,29 @@ import com.mysql.jdbc.exceptions.MySQLNonTransientConnectionException;
 
 @WebServlet("/Day")
 public class Day extends HttpServlet {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	final String sql_terminNormal = "SELECT * FROM termine WHERE datum=?";
 	final String sql_speiseNormal = "SELECT * FROM speisen WHERE id=?";
 	final String sql_terminDiaet = "SELECT * FROM diaetermine WHERE datum=?";
 	final String sql_speiseDiaet = "SELECT * FROM diaetspeisen WHERE id=?";
+	ConnectDB connection;
+	
+	@Override	
+	public void init()
+	{
+		connection = new ConnectDB();
+		ServletContext context = getServletContext();
+		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
+		
+		connection.init(fullPath);
+		try {
+			connection.connectDB();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	private JSONObject getWeekfromDate(String date, String termin, String speise, HttpServletResponse response)
 			throws SQLException, ClassNotFoundException, IOException, MySQLNonTransientConnectionException {
@@ -47,13 +61,6 @@ public class Day extends HttpServlet {
 		} else {
 			formated = Integer.toString(day);
 		}
-
-		ConnectDB connection = new ConnectDB();
-		ServletContext context = getServletContext();
-		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
-
-		connection.init(fullPath);
-		connection.connectDB();
 
 		if (connection.getDbConnection() != null) {
 			PreparedStatement psFindDates = null;
@@ -115,26 +122,20 @@ public class Day extends HttpServlet {
 
 	private void getData(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
-		ConnectDB connection = new ConnectDB();
-		ServletContext context = getServletContext();
-		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
-
-		connection.init(fullPath);
-		connection.connectDB();
 
 		if (connection.getDbConnection() != null) {
 			response.setCharacterEncoding("UTF-8");
 			response.setContentType("application/json");
 
-			if (request.getParameter("week") == null || request.getParameter("week") == "") {
+			if (request.getParameter("day") == null || request.getParameter("day") == "") {
 				response.getWriter().write("Invalid input");
 			} else {
 				JSONObject masterObj = new JSONObject();
 				try {
-					if (checkValidDate(request.getParameter("week"))) {
-						JSONObject usualCanteen = getWeekfromDate(request.getParameter("week"), sql_terminNormal,
+					if (checkValidDate(request.getParameter("day"))) {
+						JSONObject usualCanteen = getWeekfromDate(request.getParameter("day"), sql_terminNormal,
 								sql_speiseNormal, response);
-						JSONObject diatCanteen = getWeekfromDate(request.getParameter("week"), sql_terminDiaet,
+						JSONObject diatCanteen = getWeekfromDate(request.getParameter("day"), sql_terminDiaet,
 								sql_speiseDiaet, response);
 						masterObj.put("Mensa0", usualCanteen);
 						masterObj.put("Mensa1", diatCanteen);
@@ -143,14 +144,9 @@ public class Day extends HttpServlet {
 					}
 
 				} catch (ClassNotFoundException | SQLException e) {
+					e.printStackTrace();
 				}
 				response.getWriter().write(masterObj.toString());
-			}
-
-			try {
-				connection.getDbConnection().close();
-			} catch (SQLException e) {
-				e.printStackTrace();
 			}
 		}
 	}
@@ -160,7 +156,7 @@ public class Day extends HttpServlet {
 		try {
 			getData(request, response);
 		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
+			e.getStackTrace();
 		}
 	}
 
