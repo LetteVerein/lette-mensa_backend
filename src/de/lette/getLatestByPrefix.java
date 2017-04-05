@@ -25,6 +25,10 @@ public class getLatestByPrefix extends HttpServlet {
 
 	@Override
 	public void init() {
+		initConnection();
+	}
+
+	public void initConnection() {
 		connection = new ConnectDB();
 		ServletContext context = getServletContext();
 		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
@@ -42,6 +46,19 @@ public class getLatestByPrefix extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
+		try {
+			if (!connection.getDbConnection().isValid(5)) {
+				try {
+					connection.getDbConnection().close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				initConnection();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 		if (connection.getDbConnection() != null) {
 			response.setCharacterEncoding("UTF-8");
 			response.setContentType("application/json");

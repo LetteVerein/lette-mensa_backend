@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.*;
 
-import com.mysql.jdbc.exceptions.MySQLNonTransientConnectionException;
-
 @WebServlet("/Day")
 public class Day extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -28,6 +26,10 @@ public class Day extends HttpServlet {
 
 	@Override
 	public void init() {
+		initConnection();
+	}
+
+	public void initConnection() {
 		connection = new ConnectDB();
 		ServletContext context = getServletContext();
 		String fullPath = context.getRealPath("/WEB-INF/db.cfg");
@@ -43,7 +45,7 @@ public class Day extends HttpServlet {
 	}
 
 	private JSONObject getWeekfromDate(String date, String termin, String speise, HttpServletResponse response)
-			throws SQLException, ClassNotFoundException, IOException, MySQLNonTransientConnectionException {
+			throws SQLException, ClassNotFoundException, IOException {
 
 		JSONObject dateObject = new JSONObject();
 		JSONObject typeObject = null;
@@ -153,7 +155,15 @@ public class Day extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {
-			getData(request, response);
+			if (connection.getDbConnection().isValid(5)) {
+				getData(request, response);
+
+			} else {
+				connection.getDbConnection().close();
+				initConnection();
+				getData(request, response);
+			}
+
 		} catch (ClassNotFoundException | SQLException e) {
 			e.getStackTrace();
 		}

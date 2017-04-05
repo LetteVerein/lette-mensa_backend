@@ -53,9 +53,9 @@ public class ConnectDB {
 	}
 
 	public Connection connectDB() throws ClassNotFoundException, SQLException {
-		Class.forName("com.mysql.jdbc.Driver");
+		Class.forName("org.mariadb.jdbc.Driver");
 		dbConnection = DriverManager.getConnection("jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName + "?"
-				+ "user=" + dbUser + "&" + "password=" + dbPass);
+				+ "user=" + dbUser + "&" + "password=" + dbPass + "&?autoReconnect=true");
 		return dbConnection;
 	}
 
