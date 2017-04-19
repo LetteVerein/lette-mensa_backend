@@ -20,16 +20,7 @@ import com.esotericsoftware.minlog.Log;
 /**
  * Searches the database by a given day and returns the results as a JSON Object
  * @author Leon
- *
- */
-/**
- * @author e4_schlender
- *
- */
-/**
- * @author e4_schlender
- *
- */
+**/	
 @WebServlet("/Day")
 public class Day extends HttpServlet {
 	private static final long serialVersionUID = 1L;
