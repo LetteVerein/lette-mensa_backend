@@ -20,6 +20,11 @@ import java.util.Iterator;
 
 import com.esotericsoftware.minlog.Log;;
 
+/**
+ * Accepts JSON Objects and store them into a database
+ * @author Leon
+ *
+ */
 @WebServlet("/saveMeal")
 public class saveMeal extends HttpServlet {
 
@@ -40,6 +45,13 @@ public class saveMeal extends HttpServlet {
 		super();
 	}
 
+	/**
+	 * Connects to the database and parses the JSON Object to call to save it
+	 * @param request
+	 * @param response
+	 * @throws ServletException
+	 * @throws IOException
+	 */
 	public void getData(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			ConnectDB connection = new ConnectDB(); // Creates a instance of a
@@ -159,6 +171,14 @@ public class saveMeal extends HttpServlet {
 		}
 	}
 
+	/**
+	 * Deletes all data of a day
+	 * @param date Date to delete
+	 * @param diaet Decide between diaet and the "normal" canteen
+	 * @param connection
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	private void delteExistingDate(String date, Boolean diaet, ConnectDB connection)
 			throws ClassNotFoundException, SQLException {
 		if (connection.getDbConnection() != null) {
@@ -187,6 +207,21 @@ public class saveMeal extends HttpServlet {
 
 	/*
 	 * Saves a meal into the meal table in the database
+	 * @param name
+	 * @param type
+	 * @param notice
+	 * @param kcal
+	 * @param protein
+	 * @param fat
+	 * @param carbohydrates
+	 * @param description
+	 * @param price
+	 * @param additives
+	 * @param diaet
+	 * @param date
+	 * @param connection
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
 	 */
 	private void saveMealToDB(String name, String type, String notice, String kcal, String protein, String fat,
 			String carbohydrates, String description, String price, String additives, Boolean diaet, String date,

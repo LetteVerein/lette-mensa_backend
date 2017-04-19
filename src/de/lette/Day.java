@@ -15,6 +15,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.*;
 
+import com.esotericsoftware.minlog.Log;
+
+/**
+ * Searches the database by a given day and returns the results as a JSON Object
+ * @author Leon
+ *
+ */
+/**
+ * @author e4_schlender
+ *
+ */
+/**
+ * @author e4_schlender
+ *
+ */
 @WebServlet("/Day")
 public class Day extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -24,11 +39,17 @@ public class Day extends HttpServlet {
 	final String sql_speiseDiaet = "SELECT * FROM diaetspeisen WHERE id=?";
 	ConnectDB connection;
 
+	/* (non-Javadoc)
+	 * @see javax.servlet.GenericServlet#init()
+	 */
 	@Override
 	public void init() {
 		initConnection();
 	}
 
+	/**
+	 * Invokes a database connection
+	 */
 	public void initConnection() {
 		connection = new ConnectDB();
 		ServletContext context = getServletContext();
@@ -44,7 +65,19 @@ public class Day extends HttpServlet {
 		}
 	}
 
-	private JSONObject getWeekfromDate(String date, String termin, String speise, HttpServletResponse response)
+	
+	/**
+	 * Requests data from the database given by the date and displays it as JSON
+	 * @param date Date to search for 
+	 * @param sql_grabByDate SQL Statement to find dates
+	 * @param sql_findByMeal SQL Statement to find meals
+	 * @param response the response object
+	 * @return
+	 * @throws SQLException
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
+	private JSONObject getWeekfromDate(String date, String sql_grabByDate, String sql_findByMeal, HttpServletResponse response)
 			throws SQLException, ClassNotFoundException, IOException {
 
 		JSONObject dateObject = new JSONObject();
@@ -65,7 +98,7 @@ public class Day extends HttpServlet {
 
 		if (connection.getDbConnection() != null) {
 			PreparedStatement psFindDates = null;
-			psFindDates = connection.getDbConnection().prepareStatement(termin);
+			psFindDates = connection.getDbConnection().prepareStatement(sql_grabByDate);
 			psFindDates.setString(1, year + "-" + month + "-" + formated);
 
 			ResultSet rsDates = psFindDates.executeQuery();
@@ -75,7 +108,7 @@ public class Day extends HttpServlet {
 			}
 			typeObject = new JSONObject();
 			for (int iterateDates = 0; iterateDates < dateArray.size(); iterateDates++) {
-				PreparedStatement psFindMealByDate = connection.dbConnection.prepareStatement(speise);
+				PreparedStatement psFindMealByDate = connection.dbConnection.prepareStatement(sql_findByMeal);
 				psFindMealByDate.setInt(1, dateArray.get(iterateDates));
 				ResultSet rsMealsByDay = psFindMealByDate.executeQuery();
 
@@ -117,10 +150,25 @@ public class Day extends HttpServlet {
 
 	}
 
+	
+	/**
+	 * checks if the given date is in the correct format (YYYY-MM-DD)
+	 * @param date Date to check
+	 * @return
+	 */
 	private boolean checkValidDate(String date) {
 		return Pattern.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}", date);
 	}
 
+	/**
+	 * validates the given input
+	 * @param request
+	 * @param response
+	 * @throws ServletException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	private void getData(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException, ClassNotFoundException, SQLException {
 
@@ -148,10 +196,15 @@ public class Day extends HttpServlet {
 					e.printStackTrace();
 				}
 				response.getWriter().write(masterObj.toString());
+				Log.info("- " + request.getRemoteAddr() + " requested " + request.getParameter("day"));
 			}
 		}
 	}
 
+	
+	/* (non-Javadoc)
+	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		try {

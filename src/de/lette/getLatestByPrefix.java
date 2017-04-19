@@ -14,20 +14,31 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.*;
 
+/**
+ * Looks up names of meals by a given prefix
+ * 
+ * @author Leon
+ *
+ */
 @WebServlet("/getLatestByPrefix")
 public class getLatestByPrefix extends HttpServlet {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	String sql_getByPrefixWithType = "SELECT name FROM `speisen` WHERE name LIKE ? AND ART=? ORDER BY name DESC LIMIT 15";
 	ConnectDB connection;
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.servlet.GenericServlet#init()
+	 */
 	@Override
 	public void init() {
 		initConnection();
 	}
 
+	/**
+	 * Invokes a database connection
+	 */
 	public void initConnection() {
 		connection = new ConnectDB();
 		ServletContext context = getServletContext();
@@ -58,7 +69,7 @@ public class getLatestByPrefix extends HttpServlet {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		if (connection.getDbConnection() != null) {
 			response.setCharacterEncoding("UTF-8");
 			response.setContentType("application/json");
@@ -81,10 +92,25 @@ public class getLatestByPrefix extends HttpServlet {
 		}
 	}
 
-	public boolean isNumeric(String s) {
-		return s.matches("[-+]?\\d*\\.?\\d+");
+	/**
+	 * Checks if the given string is numeric
+	 * 
+	 * @param string
+	 *            String to check
+	 * @return True or False
+	 */
+	public boolean isNumeric(String string) {
+		return string.matches("[-+]?\\d*\\.?\\d+");
 	}
 
+	/**
+	 * @param prefix
+	 *            Prefix to look for
+	 * @param type
+	 *            Meal type (main course,dessert, etc.)
+	 * @param dbConnection
+	 * @return a JSON Object of results
+	 */
 	private JSONObject getLast(String prefix, String type, Connection dbConnection) {
 		JSONObject foodObject = null;
 		try {
