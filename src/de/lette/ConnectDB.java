@@ -29,7 +29,7 @@ public class ConnectDB {
 	Properties properties;
 
 	/**
-	 * sets the database connection variables yb the give parameter
+	 * sets the database connection variables by the given parameters
 	 * 
 	 * @param dbHost
 	 *            IP Address/Host of the Database
